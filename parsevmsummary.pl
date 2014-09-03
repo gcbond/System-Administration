@@ -9,13 +9,15 @@ die "Please specify the file as an arugment!\n" unless defined($ARGV[0]);
 
 my $filepath = $ARGV[0];
 
-open (FILE, $filepath);
+#Why does Windows use this format?!
+open (FILE, '<:raw:encoding(ucs-2le):crlf:utf8', $filepath) or die "Could not find file!\n";
 
 my ($cpuCount, $snapshots, $os, $uptime, $cpuLoadHistory, $host, $ip, $fqdn, $cpuLoad, $born, $state, $name, $memoryUse, $guid);
-my %vms = {};
+my %vms = ();
 #Read the file line by line
 while(<FILE>) {
 	chomp($_);
+	#$_ =~ s/\x0//g;
 	if($_ =~ m/^CPUCount/) {
 		$_ =~ s/^CPUCount\s+:\s?//g;
 		$cpuCount = $_;
@@ -24,8 +26,8 @@ while(<FILE>) {
 		$_ =~ s/^Snapshots\s+:\s?//g;
 		$snapshots = $_;
 	}
-	elsif($_ =~ m/^GuestOS/) {
-		$_ =~ s/^GuestOS\s+:\s?//g;
+	elsif($_ =~ m/^GuestOS/) 
+{		$_ =~ s/^GuestOS\s+:\s?//g;
 		$os = $_;
 	}
 	elsif($_ =~ m/^UptimeFormatted/) {
@@ -77,7 +79,7 @@ while(<FILE>) {
 		$_ =~ s/^MemoryUsage\s+:\s?//g;
 		$memoryUse = $_;
 		#Since we are going line by line this is the last field
-		my @summary = ($host, $name, $state, $cpuCount, $cpuLoadHistory, $memoryUse, "", $snapshots, $born,);
+		my @summary = ($host, $name, $state, $cpuCount, $cpuLoadHistory, $memoryUse, "", $snapshots, $born);
 		$vms{$guid} = \@summary;
 	}
 }
